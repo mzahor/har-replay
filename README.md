@@ -3,6 +3,8 @@ har-replay
 
 A small, basic tool to replay requests from a HTTP Archive (HAR) file for testing purposes.
 
+based on [this repo](https://github.com/kkovacs/har-replay) with some improvements.
+
 Installation
 ============
 
