@@ -3,13 +3,14 @@
 'use strict';
 
 // Loading modules
-var fs = require('fs');
-var _ = require('underscore');
-var _s = require('underscore.string');
-var request = require('request');
-var moment = require('moment');
-var commander = require('commander');
-var chalk = require('chalk');
+const fs = require('fs');
+const _ = require('underscore');
+const _s = require('underscore.string');
+const request = require('request');
+const moment = require('moment');
+const commander = require('commander');
+const chalk = require('chalk');
+const duration = moment.duration;
 
 commander
     .option('-s, --site <site>', 'only fire requests that are for this domain (ignore everything else)')
@@ -62,6 +63,7 @@ fs.readFile(commander.file, function(err, data) {
             // Send a request into the future
             _.delay(function() {
                 // New request
+                let start = moment();
                 var req = request({
                     url: entry.request.url,
                     method: entry.request.method,
@@ -72,9 +74,13 @@ fs.readFile(commander.file, function(err, data) {
                         return memo;
                     }, {})
                 }, function(error, response, body) {
+                	let end = moment();
                     // Just print a status, drop the files as soon as possible
                     if (response) {
-                        console.log(entry.request.url + " => " + coloredResponse(response.statusCode));
+                        console.log(`${entry.request.url} => ${coloredResponse(response.statusCode)} in ${duration(end.diff(start)).as('ms')}ms`);
+                        if (response.statusCode >= 500) {
+                        	console.log(response.body)
+                        }
                     } else {
                         // Likely failed because it was a websocket
                         console.log(entry.request.url + " => 0");
