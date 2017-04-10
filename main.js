@@ -17,12 +17,17 @@ commander
     .option('-f, --file <file>', 'HAR file to replay')
     .option('-r, --repeat <times>', 'time to repeat')
     .option('-g, --regex <regex>', 'filter requests by regex')
+    .option('-i, --ignore-https-errors', 'ignore https errors')
     .parse(process.argv);
 
 // Check arguments (file is required)
 if (commander.file == undefined) {
     commander.outputHelp();
     process.exit();
+}
+
+if (commander.ignoreHttpsErrors) {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 }
 
 function coloredResponse(statusCode) {
@@ -46,11 +51,12 @@ fs.readFile(commander.file, function(err, data) {
 
     var basetime = moment(har['log']['entries'][0]['startedDateTime']);
 
-    for (let i = 0; i < commander.repeat; i++) {
+    for (let i = 0; i < (commander.repeat || 1); i++) {
         // Passing in an object
         _.forEach(har['log']['entries'], function(entry) {
         	// Ignore other urls and sites if so requested
         	if (commander.regex && !regexFilter.test(entry.request.url)) {
+                // console.log('Ignoring ', entry.request.url);
         		return;
         	}
             
@@ -84,6 +90,7 @@ fs.readFile(commander.file, function(err, data) {
                     } else {
                         // Likely failed because it was a websocket
                         console.log(entry.request.url + " => 0");
+                        console.log(error)
                     }
                 });
 
