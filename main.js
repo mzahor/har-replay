@@ -10,7 +10,6 @@ const request = require('request');
 const moment = require('moment');
 const commander = require('commander');
 const chalk = require('chalk');
-const duration = moment.duration;
 
 commander
     .option('-s, --site <site>', 'only fire requests that are for this domain (ignore everything else)')
@@ -73,6 +72,7 @@ fs.readFile(commander.file, function(err, data) {
                 var req = request({
                     url: entry.request.url,
                     method: entry.request.method,
+                    time: true,
                     // reformat headers from HAR format to a dict
                     headers: _.reduce(entry.request.headers, function(memo, e) {
                         if (e['name'][0] != ':')
@@ -83,7 +83,9 @@ fs.readFile(commander.file, function(err, data) {
                 	let end = moment();
                     // Just print a status, drop the files as soon as possible
                     if (response) {
-                        console.log(`${entry.request.url} => ${coloredResponse(response.statusCode)} in ${duration(end.diff(start)).as('ms')}ms`);
+                        const duration = Math.round(response.timingPhases.firstByte);
+
+                        console.log(`${entry.request.url} => ${coloredResponse(response.statusCode)} in ${duration}ms`);
                         if (response.statusCode >= 500) {
                         	console.log(response.body)
                         }
